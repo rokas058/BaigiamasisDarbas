@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Prideti produkta 100g matavime</h2>
+<form action="{{ url_for('maistas_prideti') }}", method="post">
+    {{ form.hidden_tag() }}
+  <div class="form-group">
+    {{ form.produktas.label(class="form-control-label") }}
+      {{ form.produktas(class="form-control") }}
+      {% if form.produktas.errors %}
+        {% for error in form.produktas.errors %}
+         <small><font color="red">{{ error }}</font></small>
+        {% endfor %}
+      {% endif %}
+  </div>
+  <div class="form-row">
+      <div class="form-group col-md-6">
+        {{ form.kalorijos.label(class="form-control-label") }}
+      {{ form.kalorijos(class="form-control") }}
+          {% if form.kalorijos.errors %}
+        {% for error in form.kalorijos.errors %}
+         <small><font color="red">{{ error }}</font></small>
+        {% endfor %}
+      {% endif %}
+        </div>
+        <div class="form-group col-md-6">
+        <label for="exampleFormControlSelect1">Svoris</label>
+        <select class="form-control" id="exampleFormControlSelect1">
+          <option>100g</option>
+        </select>
+      </div>
+  </div>
+      <div class="form-row">
+       <div class="form-group col-md-4">
+        {{ form.baltymai.label(class="form-control-label") }}
+      {{ form.baltymai(class="form-control") }}
+           {% if form.baltymai.errors %}
+        {% for error in form.baltymai.errors %}
+         <small><font color="red">{{ error }}</font></small>
+        {% endfor %}
+      {% endif %}
+       </div>
+       <div class="form-group col-md-4">
+         {{ form.angliavandeniai.label(class="form-control-label") }}
+      {{ form.angliavandeniai(class="form-control") }}
+           {% if form.angliavandeniai.errors %}
+        {% for error in form.angliavandeniai.errors %}
+         <small><font color="red">{{ error }}</font></small>
+        {% endfor %}
+      {% endif %}
+      </div>
+       <div class="form-group col-md-4">
+         {{ form.riebalai.label(class="form-control-label") }}
+      {{ form.riebalai(class="form-control") }}
+           {% if form.riebalai.errors %}
+        {% for error in form.riebalai.errors %}
+         <small><font color="red">{{ error }}</font></small>
+        {% endfor %}
+      {% endif %}
+      </div>
+  </div>
+    {{ form.prideti(class="btn btn-primary") }}
+</form>
+
+{% endblock %}
