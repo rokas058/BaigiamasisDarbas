@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -9,14 +9,13 @@ from sqlalchemy.exc import IntegrityError
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'bet kokia simbolių eilutė'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'+os.path.join(basedir, 'data.sqlite')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite')
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 
 class Maistingumas(db.Model):
-
     __tablename__ = 'maistingumas'
     id = db.Column(db.Integer, primary_key=True)
     pavadinimas = db.Column(db.String(80), unique=True, nullable=False)
@@ -43,21 +42,37 @@ def base():
 
 @app.route('/maistas_prideti', methods=["GET", "POST"])
 def maistas_prideti():
-        form = PridejimoForma()
-        if form.validate_on_submit():
-            try:
-                produktas = request.form.get('produktas').capitalize()
-                kalorijos = int(request.form['kalorijos'])
-                baltymai = float(request.form['baltymai'])
-                angliavandeniai = float(request.form['angliavandeniai'])
-                riebalai = float(request.form['riebalai'])
-                prideti = Maistingumas(produktas, kalorijos, baltymai, angliavandeniai, riebalai)
-                db.session.add(prideti)
-                db.session.commit()
-            except IntegrityError:
-                return render_template('klaida.html')
-            return render_template('pridetas_produktas.html', form=form)
-        return render_template('maistas_prideti.html', form=form)
+    form = PridejimoForma()
+    if form.validate_on_submit():
+        try:
+            produktas = request.form.get('produktas').capitalize()
+            kalorijos = int(request.form['kalorijos'])
+            baltymai = float(request.form['baltymai'])
+            angliavandeniai = float(request.form['angliavandeniai'])
+            riebalai = float(request.form['riebalai'])
+            prideti = Maistingumas(produktas, kalorijos, baltymai, angliavandeniai, riebalai)
+            db.session.add(prideti)
+            db.session.commit()
+        except IntegrityError:
+            return render_template('klaida.html', form=form)
+        return render_template('pridetas_produktas.html', form=form)
+    return render_template('maistas_prideti.html', form=form)
+
+
+@app.route('/tikrinti_maista', methods=['GET', 'POST'])
+def tikrinti_maista():
+    form = TikrintiForma()
+    if request.method == 'POST' and form.validate_on_submit():
+        produktas = request.form.get('ieskoti').capitalize()
+        ieskoti = Maistingumas.query.filter_by(pavadinimas=produktas)
+        surasta = ieskoti.all()
+        if surasta == []:
+            nera = "Nerasta prekė"
+            return render_template('tikrinti_maista.html', form=form, nera=nera)
+        return render_template('tikrinti_maista.html', form=form, surasta=surasta)
+    return render_template('tikrinti_maista.html', form=form)
+
+
 
 
 if __name__ == '__main__':

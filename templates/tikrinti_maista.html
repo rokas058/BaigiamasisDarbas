@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form method='post' action="{{ url_for('tikrinti_maista') }}">
+    {{ form.hidden_tag() }}
+  <h2>Tikrinti produktu maistingumą </h2>
+  <div class="input-group">
+    {{ form.ieskoti(class="form-control rounded") }}
+    {{ form.tikrinti(class="btn btn-outline-primary") }}
+  </div>
+  {% if surasta %}
+  {% for x in surasta %}
+  <h4>Pavadinimas: {{ x.pavadinimas }} </h4>
+  <h4>Kalorijos: {{ x.kalorijos }} kcal </h4>
+  <h4>Baltymai: {{ x.baltymai }} </h4>
+  <h4>Angliavandeniai: {{ x.angliavandeniai }} </h4>
+  <h4>Riebalai: {{ x.riebalai }} </h4>
+  {% endfor %}
+  {% endif %}
+  {% if nera %}
+  <h4>{{ nera }}</h4>
+</form>
+
+
+  {% endif %}
+{% endblock %}

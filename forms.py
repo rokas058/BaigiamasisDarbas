@@ -10,3 +10,8 @@ class PridejimoForma(FlaskForm):
     angliavandeniai = FloatField('Angliavandeniai', [DataRequired(message='Neteisingai įvesta! !')])
     riebalai = FloatField('Riebalai', [DataRequired(message='Neteisingai įvesta!')])
     prideti = SubmitField('Prideti')
+
+
+class TikrintiForma(FlaskForm):
+    ieskoti = StringField('ieskoti', [DataRequired()])
+    tikrinti = SubmitField('Tikrinti')
