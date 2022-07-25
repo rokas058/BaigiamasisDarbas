@@ -1,10 +1,10 @@
-from flask import Flask, render_template, request, redirect
+from flask import render_template, request
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from forms import *
 from sqlalchemy.exc import IntegrityError
-
+from skaiciavimai import kuno_mases_indeksas, bmr, intensyvumas, tikslas, maisto_svorio_maistingumas
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
@@ -37,7 +37,7 @@ class Maistingumas(db.Model):
 
 @app.route('/')
 def base():
-    return render_template('base.html')
+    return render_template('index.html')
 
 
 @app.route('/maistas_prideti', methods=["GET", "POST"])
@@ -64,16 +64,15 @@ def tikrinti_maista():
     form = TikrintiForma()
     if request.method == 'POST' and form.validate_on_submit():
         produktas = request.form.get('ieskoti').capitalize()
+        svoris = request.form.get('svoris')
         ieskoti = Maistingumas.query.filter_by(pavadinimas=produktas)
         surasta = ieskoti.all()
+        funkcija = maisto_svorio_maistingumas(svoris, surasta)
         if surasta == []:
             nera = "Nerastas produktas"
             return render_template('tikrinti_maista.html', form=form, nera=nera)
-        return render_template('tikrinti_maista.html', form=form, surasta=surasta)
+        return render_template('tikrinti_maista.html', form=form, funkcija=funkcija)
     return render_template('tikrinti_maista.html', form=form)
-
-
-from skaiciavimai import kuno_mases_indeksas, bmr, intensyvumas, tikslas
 
 
 @app.route('/kuno_mases_indeksas', methods=['GET', 'POST'])

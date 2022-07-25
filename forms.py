@@ -13,7 +13,8 @@ class PridejimoForma(FlaskForm):
 
 
 class TikrintiForma(FlaskForm):
-    ieskoti = StringField('Ieskoti', [DataRequired()])
+    ieskoti = StringField('Produktas', [DataRequired()])
+    svoris = IntegerField('Svoris (gramais)', [DataRequired()])
     tikrinti = SubmitField('Tikrinti')
 
 
