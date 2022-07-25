@@ -4,18 +4,24 @@
 <form method='post' action="{{ url_for('tikrinti_maista') }}">
     {{ form.hidden_tag() }}
   <h2>Tikrinti produktų maistingumą </h2>
-  <div class="input-group">
-    {{ form.ieskoti(class="form-control rounded") }}
-    {{ form.tikrinti(class="btn btn-outline-primary") }}
+  <div class="form-row">
+    <div class="form-group col-md-6">
+      {{ form.ieskoti.label(class="form-control-label") }}
+      {{ form.ieskoti(class="form-control", placeholder="Pvz: Agurkas, Pomidoras...") }}
+    </div>
+    <div class="form-group col-md-6">
+      {{ form.svoris.label(class="form-control-label") }}
+      {{ form.svoris(class="form-control", placeholder="Pvz: 100, 200...") }}
+    </div>
   </div>
-  {% if surasta %}
-  {% for x in surasta %}
-  <h4>Pavadinimas: {{ x.pavadinimas }} </h4>
-  <h4>Kalorijos: {{ x.kalorijos }} kcal </h4>
-  <h4>Baltymai: {{ x.baltymai }} </h4>
-  <h4>Angliavandeniai: {{ x.angliavandeniai }} </h4>
-  <h4>Riebalai: {{ x.riebalai }} </h4>
-  {% endfor %}
+      {{ form.tikrinti(class="btn btn-primary") }}
+  {% if funkcija %}
+  <h4>Pavadinimas: {{ funkcija[0] }} </h4>
+  <h4>Svoris: {{ funkcija[5] }} gramai </h4>
+  <h4>Kalorijos: {{ funkcija[1] }} kcal </h4>
+  <h4>Baltymai: {{ funkcija[2] }} </h4>
+  <h4>Angliavandeniai: {{ funkcija[3] }} </h4>
+  <h4>Riebalai: {{ funkcija[4] }} </h4>
   {% endif %}
   {% if nera %}
   <h4>{{ nera }}</h4>

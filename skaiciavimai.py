@@ -49,3 +49,16 @@ def tikslas(suma):
     return [mesti_svori, islaikyti_svori, auginti_svori]
 
 
+def maisto_svorio_maistingumas(svoris, listas):
+    for maistingumas in listas:
+        pavadinimas = maistingumas.pavadinimas
+        kalorijos = round(maistingumas.kalorijos / 100 * int(svoris), 1)
+        baltymai = round(maistingumas.baltymai / 100 * int(svoris), 1)
+        angliavandeniai = round(maistingumas.angliavandeniai / 100 * int(svoris), 1)
+        riebalai = round(maistingumas.riebalai / 100 * int(svoris), 1)
+        rezultatas = [pavadinimas, kalorijos, baltymai, angliavandeniai, riebalai, int(svoris)]
+        return rezultatas
+
+
+
+
