@@ -2,11 +2,11 @@
 
 {% block content %}
 <h2>Pridėti produktą 100g matavime</h2>
-<form action="{{ url_for('maistas_prideti') }}", method="post">
+<form action="{{ url_for('maistas_prideti') }}" , method="post">
     {{ form.hidden_tag() }}
   <div class="form-group">
     {{ form.produktas.label(class="form-control-label") }}
-      {{ form.produktas(class="form-control") }}
+      {{ form.produktas(class="form-control", placeholder="Pvz: Agurkas, Pomidoras...") }}
       {% if form.produktas.errors %}
         {% for error in form.produktas.errors %}
          <small><font color="red">{{ error }}</font></small>
@@ -61,5 +61,6 @@
   </div>
     {{ form.prideti(class="btn btn-primary") }}
 </form>
+
 
 {% endblock %}

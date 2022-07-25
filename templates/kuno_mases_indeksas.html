@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Kūno masės indeksas</h2>
+<form method="post" , action="{{ url_for('kmi') }}">
+    {{ form.hidden_tag() }}
+    <div class="form-row">
+      <div class="form-group col-md-6">
+          {{ form.ugis.label(class="form-control-label") }}
+         {{ form.ugis(class="form-control", placeholder="Ūgis cm pvz: 180") }}
+      </div>
+      <div class="form-group col-md-6">
+          {{ form.svoris.label(class="form-control-label") }}
+        {{ form.svoris(class="form-control", placeholder="Svoris kg pvz: 90...") }}
+      </div>
+    </div>
+        {{ form.skaiciuoti(class="btn btn-primary") }}
+    {% if atsakymas1 %}
+    <h2>KMI: {{ atsakymas2 }} </h2>
+    <h2>KMI įvertinimas: {{ atsakymas1 }}! </h2>
+    {% endif %}
+
+</form>
+
+
+{% endblock %}
