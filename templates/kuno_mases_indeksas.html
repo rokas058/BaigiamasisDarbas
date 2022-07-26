@@ -15,9 +15,9 @@
       </div>
     </div>
         {{ form.skaiciuoti(class="btn btn-primary") }}
-    {% if atsakymas1 %}
-    <h2>KMI: {{ atsakymas2 }} </h2>
-    <h2>KMI įvertinimas: {{ atsakymas1 }}! </h2>
+    {% if funkcija %}
+    <h2>KMI: {{ funkcija[1] }} </h2>
+    <h2>KMI įvertinimas: {{ funkcija[0] }}! </h2>
     {% endif %}
 
 </form>

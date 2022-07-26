@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, FloatField, SubmitField, IntegerField, SelectField
-from wtforms.validators import DataRequired, Length
+from wtforms import StringField, FloatField, SubmitField, IntegerField, SelectField, PasswordField, BooleanField
+from wtforms.validators import DataRequired, ValidationError, EqualTo
+import app
 
 
 class PridejimoForma(FlaskForm):
@@ -36,3 +37,28 @@ class DienosKalorijuForma(FlaskForm):
         ('Labai aktyvus 3-4val.', 'Labai aktyvus 3-4val.'),
         ('Ypač aktyvus 5+ val.', 'Ypač aktyvus 5+ val.')])
     skaiciuoti = SubmitField('Skaičiuoti')
+
+
+class RegistracijosForma(FlaskForm):
+    vardas = StringField('Vardas', [DataRequired()])
+    el_pastas = StringField('El. paštas', [DataRequired()])
+    slaptazodis = PasswordField('Slaptažodis', [DataRequired()])
+    patvirtintas_slaptazodis = PasswordField("Pakartokite slaptažodį", [EqualTo('slaptazodis', "Slaptažodis turi sutapti.")])
+    submit = SubmitField('Prisiregistruoti')
+
+    def tikrinti_varda(self, vardas):
+        vartotojas = app.Vartotojas.query.filter_by(vardas=vardas.data).first()
+        if vartotojas:
+            raise ValidationError('Šis vardas panaudotas. Pasirinkite kitą.')
+
+    def tikrinti_pasta(self, el_pastas):
+        vartotojas = app.Vartotojas.query.filter_by(el_pastas=el_pastas.data).first()
+        if vartotojas:
+            raise ValidationError('Šis el. pašto adresas panaudotas. Pasirinkite kitą.')
+
+
+class PrisijungimoForma(FlaskForm):
+    el_pastas = StringField('El. paštas', [DataRequired()])
+    slaptazodis = PasswordField('Slaptažodis', [DataRequired()])
+    prisiminti = BooleanField("Prisiminti mane")
+    submit = SubmitField('Prisijungti')

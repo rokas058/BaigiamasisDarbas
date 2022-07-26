@@ -1,10 +1,12 @@
-from flask import render_template, request
+from flask import render_template, request, redirect, url_for, flash
 import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from forms import *
 from sqlalchemy.exc import IntegrityError
 from skaiciavimai import kuno_mases_indeksas, bmr, intensyvumas, tikslas, maisto_svorio_maistingumas
+from flask_login import LoginManager, UserMixin, current_user, login_user, login_required, logout_user
+from flask_bcrypt import Bcrypt
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
@@ -13,6 +15,12 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'da
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+login_manager = LoginManager(app)
+login_manager.login_view = 'registruotis'
+login_manager.login_message_category = 'info'
+
+bcrypt = Bcrypt(app)
 
 
 class Maistingumas(db.Model):
@@ -35,6 +43,58 @@ class Maistingumas(db.Model):
         return f'{self.pavadinimas} : {self.kalorijos}, {self.baltymai}, {self.angliavandeniai}, {self.riebalai}'
 
 
+class Vartotojas(db.Model, UserMixin):
+    __tablename__ = "vartotojas"
+    id = db.Column(db.Integer, primary_key=True)
+    vardas = db.Column("Vardas", db.String(20), unique=True, nullable=False)
+    el_pastas = db.Column("El. pašto adresas", db.String(120), unique=True, nullable=False)
+    slaptazodis = db.Column("Slaptažodis", db.String(60), unique=True, nullable=False)
+
+
+@login_manager.user_loader
+def load_user(vartotojo_id):
+    return Vartotojas.query.get(int(vartotojo_id))
+
+
+@app.route("/registruotis", methods=['GET', 'POST'])
+def registruotis():
+    db.create_all()
+    form = RegistracijosForma()
+    if form.validate_on_submit():
+        try:
+            koduotas_slaptazodis = bcrypt.generate_password_hash(form.slaptazodis.data).decode('utf-8')
+            vartotojas = Vartotojas(vardas=form.vardas.data, el_pastas=form.el_pastas.data,
+                                    slaptazodis=koduotas_slaptazodis)
+            db.session.add(vartotojas)
+            db.session.commit()
+            flash('Sėkmingai prisiregistravote! Galite prisijungti', 'success')
+        except IntegrityError:
+            flash('Toks vartotojas jau yra!', 'danger')
+    return render_template('registruotis.html', title='Register', form=form)
+
+
+@app.route("/prisijungti", methods=['GET', 'POST'])
+def prisijungti():
+    if current_user.is_authenticated:
+        return redirect(url_for('base'))
+    form = PrisijungimoForma()
+    if form.validate_on_submit():
+        user = Vartotojas.query.filter_by(el_pastas=form.el_pastas.data).first()
+        if user and bcrypt.check_password_hash(user.slaptazodis, form.slaptazodis.data):
+            login_user(user, remember=form.prisiminti.data)
+            next_page = request.args.get('next')
+            return redirect(next_page) if next_page else redirect(url_for('base'))
+        else:
+            flash('Prisijungti nepavyko. Patikrinkite el. paštą ir slaptažodį', 'danger')
+    return render_template('prisijungti.html', title='Prisijungti', form=form)
+
+
+@app.route("/atsijungti")
+def atsijungti():
+    logout_user()
+    return redirect(url_for('base'))
+
+
 @app.route('/')
 def base():
     return render_template('index.html')
@@ -44,18 +104,19 @@ def base():
 def maistas_prideti():
     form = PridejimoForma()
     if form.validate_on_submit():
+        produktas = request.form.get('produktas').capitalize()
+        kalorijos = int(request.form['kalorijos'])
+        baltymai = float(request.form['baltymai'])
+        angliavandeniai = float(request.form['angliavandeniai'])
+        riebalai = float(request.form['riebalai'])
+        prideti = Maistingumas(produktas, kalorijos, baltymai, angliavandeniai, riebalai)
+        db.session.add(prideti)
         try:
-            produktas = request.form.get('produktas').capitalize()
-            kalorijos = int(request.form['kalorijos'])
-            baltymai = float(request.form['baltymai'])
-            angliavandeniai = float(request.form['angliavandeniai'])
-            riebalai = float(request.form['riebalai'])
-            prideti = Maistingumas(produktas, kalorijos, baltymai, angliavandeniai, riebalai)
-            db.session.add(prideti)
             db.session.commit()
+            flash('Sėkmingai pridėjote produktą!', 'success')
         except IntegrityError:
-            return render_template('klaida.html', form=form)
-        return render_template('pridetas_produktas.html', form=form)
+            db.session.rollback()
+            flash('Toks produktas yra, patikrinkite!', 'danger')
     return render_template('maistas_prideti.html', form=form)
 
 
@@ -69,8 +130,7 @@ def tikrinti_maista():
         surasta = ieskoti.all()
         funkcija = maisto_svorio_maistingumas(svoris, surasta)
         if surasta == []:
-            nera = "Nerastas produktas"
-            return render_template('tikrinti_maista.html', form=form, nera=nera)
+            flash('Tokio produkto nėra arba blogai suvedėte!', 'danger')
         return render_template('tikrinti_maista.html', form=form, funkcija=funkcija)
     return render_template('tikrinti_maista.html', form=form)
 
@@ -82,9 +142,7 @@ def kmi():
         mase = int(request.form['svoris'])
         ugis = int(request.form['ugis'])
         funkcija = kuno_mases_indeksas(ugis, mase)
-        atsakymas1 = funkcija[0]
-        atsakymas2 = funkcija[1]
-        return render_template("kuno_mases_indeksas.html", form=form, atsakymas1=atsakymas1, atsakymas2=atsakymas2)
+        return render_template("kuno_mases_indeksas.html", form=form, funkcija=funkcija)
     return render_template("kuno_mases_indeksas.html", form=form)
 
 
