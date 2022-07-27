@@ -7,6 +7,7 @@ from sqlalchemy.exc import IntegrityError
 from skaiciavimai import kuno_mases_indeksas, bmr, intensyvumas, tikslas, maisto_svorio_maistingumas
 from flask_login import LoginManager, UserMixin, current_user, login_user, login_required, logout_user
 from flask_bcrypt import Bcrypt
+from datetime import datetime
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
@@ -49,6 +50,19 @@ class Vartotojas(db.Model, UserMixin):
     vardas = db.Column("Vardas", db.String(20), unique=True, nullable=False)
     el_pastas = db.Column("El. pašto adresas", db.String(120), unique=True, nullable=False)
     slaptazodis = db.Column("Slaptažodis", db.String(60), unique=True, nullable=False)
+
+
+class Straipsnis(db.Model):
+    __tablename__ = "straipsnis"
+    id = db.Column(db.Integer, primary_key=True)
+    vardas = db.Column("Vardas", db.String(), nullable=False)
+    pavadinimas = db.Column("Pavadinimas", db.String(), nullable=False)
+    tema = db.Column("Tema", db.String(), nullable=False)
+    data = db.Column("Data", db.DateTime(), nullable=False, default=datetime.today())
+    tekstas = db.Column("Tekstas", db.String(), nullable=False)
+
+    def __repr__(self):
+        return f'{self.vardas}, {self.pavadinimas}, {self.tema}, {self.data}, {self.tekstas}'
 
 
 @login_manager.user_loader
@@ -190,6 +204,43 @@ def peciams():
 @app.route('/krutinei')
 def krutinei():
     return render_template('krutinei.html')
+
+
+@app.route('/straipsniai_mityba')
+def straipsniai_mityba():
+    data = Straipsnis.query.filter_by(tema="Mityba")
+    return render_template('straipsniai_mityba.html', data=data.all(), datetime=datetime)
+
+
+@app.route('/straipsniai_sportas')
+def straipsniai_sportas():
+    data = Straipsnis.query.filter_by(tema="Sportas")
+    return render_template('straipsniai_sportas.html', data=data.all(), datetime=datetime)
+
+
+@app.route('/straipsniai_sveikata')
+def straipsniai_sveikata():
+    data = Straipsnis.query.filter_by(tema="Sveikata")
+    return render_template('straipsniai_sveikata.html', data=data.all(), datetime=datetime)
+
+
+@app.route('/straipsniai_<string:tema>/<string:pavadinimas><int:id>')
+def straipsnis(tema, pavadinimas, id):
+    data = Straipsnis.query.filter_by(id=id)
+    return render_template('straipsnis.html', pavadinimas=pavadinimas, tema=tema, id=id, data=data.all(), datetime=datetime)
+
+
+@app.route("/prideti_straipsni", methods=['GET', 'POST'])
+@login_required
+def prideti_straipsni():
+    form = StraipsnisForma()
+    if form.validate_on_submit():
+        prideti = Straipsnis(vardas=current_user.vardas, pavadinimas=form.pavadinimas.data, tema=form.tema.data,
+                             tekstas=form.tekstas.data)
+        db.session.add(prideti)
+        db.session.commit()
+        flash('Sėkmingai įkeltas straipsnis!', 'success')
+    return render_template('prideti_straipsni.html', title='prideti_straipsni', form=form)
 
 
 if __name__ == '__main__':
