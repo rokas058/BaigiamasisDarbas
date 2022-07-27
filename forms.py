@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, FloatField, SubmitField, IntegerField, SelectField, PasswordField, BooleanField
-from wtforms.validators import DataRequired, ValidationError, EqualTo
+from wtforms import StringField, FloatField, SubmitField, IntegerField, SelectField, PasswordField, BooleanField, \
+    DateField, TextAreaField
+from wtforms.validators import DataRequired, ValidationError, EqualTo, InputRequired
 import app
 
 
@@ -43,7 +44,8 @@ class RegistracijosForma(FlaskForm):
     vardas = StringField('Vardas', [DataRequired()])
     el_pastas = StringField('El. paštas', [DataRequired()])
     slaptazodis = PasswordField('Slaptažodis', [DataRequired()])
-    patvirtintas_slaptazodis = PasswordField("Pakartokite slaptažodį", [EqualTo('slaptazodis', "Slaptažodis turi sutapti.")])
+    patvirtintas_slaptazodis = PasswordField("Pakartokite slaptažodį",
+                                             [EqualTo('slaptazodis', "Slaptažodis turi sutapti.")])
     submit = SubmitField('Prisiregistruoti')
 
     def tikrinti_varda(self, vardas):
@@ -62,3 +64,13 @@ class PrisijungimoForma(FlaskForm):
     slaptazodis = PasswordField('Slaptažodis', [DataRequired()])
     prisiminti = BooleanField("Prisiminti mane")
     submit = SubmitField('Prisijungti')
+
+
+class StraipsnisForma(FlaskForm):
+    pavadinimas = StringField('Pavadinimas', [DataRequired()])
+    tema = SelectField('Tema', choices=[
+        ('Mityba', 'Mityba'),
+        ('Sportas', 'Sportas'),
+        ('Sveikata', 'Sveikata')])
+    tekstas = TextAreaField('Tekstas', render_kw={"rows": 10, "cols": 10})
+    submit = SubmitField('Ikelti')
