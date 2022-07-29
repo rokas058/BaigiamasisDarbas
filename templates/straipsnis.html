@@ -4,10 +4,10 @@
 
 {% for straipsnis in data %}
 
-<h1 class="text-center">{{ straipsnis['pavadinimas'] }}</h1>
-<p class="text-center">{{ datetime.strftime(straipsnis.data, "%Y-%m-%d")}} <i>{{ straipsnis['vardas'] }}</i></p>
+<h1 class="text-center">{{ straipsnis.pavadinimas.capitalize() }}</h1>
+<p class="text-center">{{ datetime.strftime(straipsnis.data, "%Y-%m-%d")}} <i>{{ straipsnis.vardas }}</i></p>
 <hr>
-<p class="text-break" style="text-indent: 50px; white-space: initial;">{{ straipsnis['tekstas'] }}</p>
+<p class="text-break" style="text-indent: 50px; white-space: initial;">{{ straipsnis.tekstas }}</p>
 <br><br>
 
 {% endfor %}

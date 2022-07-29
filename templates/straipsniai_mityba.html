@@ -4,11 +4,23 @@
 
 <h1>Mityba</h1>
 <br>
-{% for straipsnis in data %}
+{% for straipsnis in data.items %}
 <h3><a href="{{ url_for('straipsnis',tema=straipsnis.tema, pavadinimas=straipsnis.pavadinimas, id=straipsnis.id) }}"
-class="text-info">{{ straipsnis.pavadinimas }}</a></h3>
+class="text-info">{{ straipsnis.pavadinimas.capitalize() }}</a></h3>
 <p>{{ datetime.strftime(straipsnis.data, "%Y-%m-%d")}} <i>{{ straipsnis.vardas }}</i></p>
 <hr>
 {% endfor %}
+{% for page_num in data.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+  {% if page_num %}
+    {% if data.page == page_num %}
+      <a class="btn btn-info mb-4" href="{{ url_for('straipsniai_mityba', page=page_num) }}">{{ page_num }}</a>
+    {% else %}
+      <a class="btn btn-outline-info mb-4" href="{{ url_for('straipsniai_mityba', page=page_num) }}">{{ page_num }}</a>
+    {% endif %}
+  {% else %}
+    ...
+  {% endif %}
+{% endfor %}
+
 
 {% endblock %}
