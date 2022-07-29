@@ -60,5 +60,28 @@ def maisto_svorio_maistingumas(svoris, listas):
         return rezultatas
 
 
+def maistingumo_listas(listas):
+    skaicius = len(listas)
+    skaicius1 = skaicius - 1
+    naujas_listas = listas[skaicius1]
+    naujas_listas.append(skaicius1)
+    return naujas_listas
+
+
+def maistingumo_listo_suma(listas):
+    baltymai = 0
+    angliavandeniai = 0
+    riebalai = 0
+    kalorijos = 0
+    for x in listas:
+        baltymai += x[2]
+        angliavandeniai += x[3]
+        riebalai += x[4]
+        kalorijos += x[1]
+    return round(baltymai), round(angliavandeniai), round(riebalai), int(kalorijos)
+
+
+
+
 
 

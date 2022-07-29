@@ -4,10 +4,14 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from forms import *
 from sqlalchemy.exc import IntegrityError
-from skaiciavimai import kuno_mases_indeksas, bmr, intensyvumas, tikslas, maisto_svorio_maistingumas
+from skaiciavimai import kuno_mases_indeksas, bmr, intensyvumas, tikslas, maisto_svorio_maistingumas, maistingumo_listas,\
+    maistingumo_listo_suma
 from flask_login import LoginManager, UserMixin, current_user, login_user, login_required, logout_user
 from flask_bcrypt import Bcrypt
 from datetime import datetime
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
+
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
@@ -63,6 +67,17 @@ class Straipsnis(db.Model):
 
     def __repr__(self):
         return f'{self.vardas}, {self.pavadinimas}, {self.tema}, {self.data}, {self.tekstas}'
+
+
+class ManoModelView(ModelView):
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.el_pastas == "rokas.prabusas@gmail.com"
+
+
+admin = Admin(app)
+admin.add_view(ManoModelView(Vartotojas, db.session))
+admin.add_view(ManoModelView(Straipsnis, db.session))
+admin.add_view(ManoModelView(Maistingumas, db.session))
 
 
 @login_manager.user_loader
@@ -134,6 +149,9 @@ def maistas_prideti():
     return render_template('maistas_prideti.html', form=form)
 
 
+listas_maisto = []
+
+
 @app.route('/tikrinti_maista', methods=['GET', 'POST'])
 def tikrinti_maista():
     form = TikrintiForma()
@@ -142,11 +160,19 @@ def tikrinti_maista():
         svoris = request.form.get('svoris')
         ieskoti = Maistingumas.query.filter_by(pavadinimas=produktas)
         surasta = ieskoti.all()
-        funkcija = maisto_svorio_maistingumas(svoris, surasta)
         if surasta == []:
             flash('Tokio produkto nėra arba blogai suvedėte!', 'danger')
-        return render_template('tikrinti_maista.html', form=form, funkcija=funkcija)
-    return render_template('tikrinti_maista.html', form=form)
+            funkcija3 = maistingumo_listo_suma(listas_maisto)
+            return render_template('tikrinti_maista.html', form=form, listas_maisto=listas_maisto, funkcija3=funkcija3)
+        else:
+            funkcija = maisto_svorio_maistingumas(svoris, surasta)
+            listas_maisto.append(funkcija)
+            funkcija2 = maistingumo_listas(listas_maisto)
+            funkcija3 = maistingumo_listo_suma(listas_maisto)
+            return render_template('tikrinti_maista.html', form=form, funkcija2=funkcija2, listas_maisto=listas_maisto,
+                                   funkcija3=funkcija3)
+    listas_maisto.clear()
+    return render_template('tikrinti_maista.html', form=form, listas_maisto=listas_maisto)
 
 
 @app.route('/kuno_mases_indeksas', methods=['GET', 'POST'])
@@ -208,26 +234,30 @@ def krutinei():
 
 @app.route('/straipsniai_mityba')
 def straipsniai_mityba():
-    data = Straipsnis.query.filter_by(tema="Mityba")
-    return render_template('straipsniai_mityba.html', data=data.all(), datetime=datetime)
+    page = request.args.get('page', 1, type=int)
+    data = Straipsnis.query.filter_by(tema="Mityba").order_by(Straipsnis.data.desc()).paginate(page=page, per_page=9)
+    return render_template('straipsniai_mityba.html', data=data, datetime=datetime)
 
 
 @app.route('/straipsniai_sportas')
 def straipsniai_sportas():
-    data = Straipsnis.query.filter_by(tema="Sportas")
-    return render_template('straipsniai_sportas.html', data=data.all(), datetime=datetime)
+    page = request.args.get('page', 1, type=int)
+    data = Straipsnis.query.filter_by(tema="Sportas").order_by(Straipsnis.data.desc()).paginate(page=page, per_page=9)
+    return render_template('straipsniai_sportas.html', data=data, datetime=datetime)
 
 
 @app.route('/straipsniai_sveikata')
 def straipsniai_sveikata():
-    data = Straipsnis.query.filter_by(tema="Sveikata")
-    return render_template('straipsniai_sveikata.html', data=data.all(), datetime=datetime)
+    page = request.args.get('page', 1, type=int)
+    data = Straipsnis.query.filter_by(tema="Sveikata").order_by(Straipsnis.data.desc()).paginate(page=page, per_page=9)
+    return render_template('straipsniai_sveikata.html', data=data, datetime=datetime)
 
 
 @app.route('/straipsniai_<string:tema>/<string:pavadinimas><int:id>')
 def straipsnis(tema, pavadinimas, id):
     data = Straipsnis.query.filter_by(id=id)
-    return render_template('straipsnis.html', pavadinimas=pavadinimas, tema=tema, id=id, data=data.all(), datetime=datetime)
+    return render_template('straipsnis.html', pavadinimas=pavadinimas, tema=tema, id=id, data=data.all(),
+                           datetime=datetime)
 
 
 @app.route("/prideti_straipsni", methods=['GET', 'POST'])
@@ -240,6 +270,7 @@ def prideti_straipsni():
         db.session.add(prideti)
         db.session.commit()
         flash('Sėkmingai įkeltas straipsnis!', 'success')
+        return redirect(url_for('straipsniai_mityba'))
     return render_template('prideti_straipsni.html', title='prideti_straipsni', form=form)
 
 

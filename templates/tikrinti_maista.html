@@ -15,14 +15,43 @@
     </div>
   </div>
       {{ form.tikrinti(class="btn btn-primary") }}
-  {% if funkcija %}
-  <h4>Pavadinimas: {{ funkcija[0] }} </h4>
-  <h4>Svoris: {{ funkcija[5] }} gramai </h4>
-  <h4>Kalorijos: {{ funkcija[1] }} kcal </h4>
-  <h4>Baltymai: {{ funkcija[2] }} </h4>
-  <h4>Angliavandeniai: {{ funkcija[3] }} </h4>
-  <h4>Riebalai: {{ funkcija[4] }} </h4>
-  {% endif %}
+  <table class="table">
+  <thead>
+    <tr>
+      <th scope="col">#</th>
+      <th scope="col">Pavadinimas</th>
+      <th scope="col">Svoris(gramais)</th>
+      <th scope="col">Kalorijos(kcal)</th>
+      <th scope="col">Baltymai</th>
+      <th scope="col">Angliavandeniai</th>
+      <th scope="col">Riebalai</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      {% for x in listas_maisto %}
+      <th scope="row">{{ x[6] }}</th>
+      <td>{{ x[0] }}</td>
+      <td>{{ x[5] }}</td>
+      <td>{{ x[1] }}</td>
+      <td>{{ x[2] }}</td>
+      <td>{{ x[3] }}</td>
+      <td>{{ x[4] }}</td>
+    </tr>
+    {% endfor %}
+    <tr>
+      {% if funkcija3 %}
+      <th scope="row">#</th>
+      <td>Iš viso</td>
+      <td>#</td>
+      <td>{{ funkcija3[3] }}</td>
+      <td>{{ funkcija3[0] }}</td>
+      <td>{{ funkcija3[1] }}</td>
+      <td>{{ funkcija3[2] }}</td>
+    </tr>
+      {% endif %}
+  </tbody>
+  </table>
 </form>
 
 
