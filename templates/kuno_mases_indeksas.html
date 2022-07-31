@@ -16,10 +16,11 @@
     </div>
         {{ form.skaiciuoti(class="btn btn-primary") }}
     {% if funkcija %}
-    <h2>KMI: {{ funkcija[1] }} </h2>
-    <h2>KMI įvertinimas: {{ funkcija[0] }}! </h2>
-    {% endif %}
-
+    <div style="padding: 15px">
+        <h2>KMI: {{ funkcija[1] }} </h2>
+        <h2>KMI įvertinimas: {{ funkcija[0] }}! </h2>
+        {% endif %}
+    </div>
 </form>
 
 

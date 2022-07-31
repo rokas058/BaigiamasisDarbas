@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h1>Mityba</h1>
+<h1>Sveikata</h1>
 <br>
 {% for straipsnis in data.items %}
 <h3><a href="{{ url_for('straipsnis',tema=straipsnis.tema, pavadinimas=straipsnis.pavadinimas, id=straipsnis.id) }}"
