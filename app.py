@@ -4,14 +4,16 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from forms import *
 from sqlalchemy.exc import IntegrityError
-from skaiciavimai import kuno_mases_indeksas, bmr, intensyvumas, tikslas, maisto_svorio_maistingumas, maistingumo_listas,\
+from skaiciavimai import kuno_mases_indeksas, bmr, intensyvumas, tikslas, maisto_svorio_maistingumas, \
     maistingumo_listo_suma
 from flask_login import LoginManager, UserMixin, current_user, login_user, login_required, logout_user
 from flask_bcrypt import Bcrypt
 from datetime import datetime
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
-
+from flask_mail import Message, Mail
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from os import environ
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
@@ -54,6 +56,19 @@ class Vartotojas(db.Model, UserMixin):
     vardas = db.Column("Vardas", db.String(20), unique=True, nullable=False)
     el_pastas = db.Column("El. pašto adresas", db.String(120), unique=True, nullable=False)
     slaptazodis = db.Column("Slaptažodis", db.String(60), unique=True, nullable=False)
+
+    def get_reset_token(self):
+        s = Serializer(app.config['SECRET_KEY'])
+        return s.dumps({'user_id': self.id}).decode('utf-8')
+
+    @staticmethod
+    def verify_reset_token(token):
+        s = Serializer(app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token)['user_id']
+        except:
+            return None
+        return Vartotojas.query.get(user_id)
 
 
 class Straipsnis(db.Model):
@@ -118,6 +133,62 @@ def prisijungti():
     return render_template('prisijungti.html', title='Prisijungti', form=form)
 
 
+psw = environ.get('slaptazodis')
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 587
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USERNAME'] = 'rokas.prabusas058@gmail.com'
+app.config['MAIL_PASSWORD'] = psw
+
+mail = Mail(app)
+
+
+def send_reset_email(user):
+    token = user.get_reset_token()
+    msg = Message('Slaptažodžio atnaujinimo užklausa',
+                  sender='el@pastas.lt',
+                  recipients=[user.el_pastas])
+    msg.body = f'''Norėdami atnaujinti slaptažodį, paspauskite nuorodą:
+    {url_for('reset_token', token=token, _external=True)}
+    Jei jūs nedarėte šios užklausos, nieko nedarykite ir slaptažodis nebus pakeistas.
+    '''
+    mail.send(msg)
+
+
+@app.route("/reset_request", methods=['GET', 'POST'])
+def reset_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('base'))
+    form = UzklausosAtnaujinimoForma()
+    if form.validate_on_submit():
+        user = Vartotojas.query.filter_by(el_pastas=form.el_pastas.data).first()
+        if user is None:
+            flash('Netinkamai įvestas el.paštas', 'danger')
+            return render_template('reset_request.html', title='Reset Password', form=form)
+        send_reset_email(user)
+        flash('Jums išsiųstas el. laiškas su slaptažodžio atnaujinimo instrukcijomis.', 'info')
+        return redirect(url_for('prisijungti'))
+    return render_template('reset_request.html', title='Reset Password', form=form)
+
+
+@app.route("/reset_password/<token>", methods=['GET', 'POST'])
+def reset_token(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('base'))
+    user = Vartotojas.verify_reset_token(token)
+    if user is None:
+        flash('Užklausa netinkama arba pasibaigusio galiojimo', 'warning')
+        return redirect(url_for('reset_request'))
+    form = SlaptazodzioAtnaujinimoForma()
+    if form.validate_on_submit():
+        hashed_password = bcrypt.generate_password_hash(form.slaptazodis.data).decode('utf-8')
+        user.slaptazodis = hashed_password
+        db.session.commit()
+        flash('Tavo slaptažodis buvo atnaujintas! Gali prisijungti', 'success')
+        return redirect(url_for('prisijungti'))
+    return render_template('reset_token.html', title='Reset Password', form=form)
+
+
 @app.route("/atsijungti")
 def atsijungti():
     logout_user()
@@ -165,14 +236,15 @@ def tikrinti_maista():
             funkcija3 = maistingumo_listo_suma(listas_maisto)
             return render_template('tikrinti_maista.html', form=form, listas_maisto=listas_maisto, funkcija3=funkcija3)
         else:
-            funkcija = maisto_svorio_maistingumas(svoris, surasta)
+            skaicius = len(listas_maisto)
+            funkcija = maisto_svorio_maistingumas(svoris, surasta, skaicius)
             listas_maisto.append(funkcija)
-            funkcija2 = maistingumo_listas(listas_maisto)
             funkcija3 = maistingumo_listo_suma(listas_maisto)
-            return render_template('tikrinti_maista.html', form=form, funkcija2=funkcija2, listas_maisto=listas_maisto,
+            return render_template('tikrinti_maista.html', form=form, listas_maisto=listas_maisto,
                                    funkcija3=funkcija3)
     listas_maisto.clear()
-    return render_template('tikrinti_maista.html', form=form, listas_maisto=listas_maisto)
+    funkcija3 = maistingumo_listo_suma(listas_maisto)
+    return render_template('tikrinti_maista.html', form=form, listas_maisto=listas_maisto, funkcija3=funkcija3)
 
 
 @app.route('/kuno_mases_indeksas', methods=['GET', 'POST'])
@@ -253,8 +325,9 @@ def straipsniai_sveikata():
     return render_template('straipsniai_sveikata.html', data=data, datetime=datetime)
 
 
-@app.route('/straipsniai_<string:tema>/<string:pavadinimas><int:id>')
+@app.route('/straipsniai_<string:tema>/<string:pavadinimas>#<int:id>')
 def straipsnis(tema, pavadinimas, id):
+    print(id)
     data = Straipsnis.query.filter_by(id=id)
     return render_template('straipsnis.html', pavadinimas=pavadinimas, tema=tema, id=id, data=data.all(),
                            datetime=datetime)
@@ -270,7 +343,12 @@ def prideti_straipsni():
         db.session.add(prideti)
         db.session.commit()
         flash('Sėkmingai įkeltas straipsnis!', 'success')
-        return redirect(url_for('straipsniai_mityba'))
+        if form.tema.data == "Mityba":
+            return redirect(url_for('straipsniai_mityba'))
+        if form.tema.data == "Sportas":
+            return redirect(url_for('straipsniai_sportas'))
+        if form.tema.data == "Sveikata":
+            return redirect(url_for('straipsniai_sveikata'))
     return render_template('prideti_straipsni.html', title='prideti_straipsni', form=form)
 
 

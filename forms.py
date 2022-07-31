@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, SubmitField, IntegerField, SelectField, PasswordField, BooleanField, \
-    DateField, TextAreaField
-from wtforms.validators import DataRequired, ValidationError, EqualTo, InputRequired
+    TextAreaField
+from wtforms.validators import DataRequired, ValidationError, EqualTo, Email, Length
 import app
 
 
@@ -64,6 +64,22 @@ class PrisijungimoForma(FlaskForm):
     slaptazodis = PasswordField('Slaptažodis', [DataRequired()])
     prisiminti = BooleanField("Prisiminti mane")
     submit = SubmitField('Prisijungti')
+
+
+class UzklausosAtnaujinimoForma(FlaskForm):
+    el_pastas = StringField('El. paštas', validators=[DataRequired(), Email()])
+    submit = SubmitField('Gauti')
+
+    def validate_email(self, el_pastas):
+        user = app.Vartotojas.query.filter_by(el_pastas=el_pastas.data).first()
+        if user is None:
+            raise ValidationError('Nėra paskyros, registruotos šiuo el. pašto adresu. Registruokitės.')
+
+
+class SlaptazodzioAtnaujinimoForma(FlaskForm):
+    slaptazodis = PasswordField('Slaptažodis', validators=[DataRequired()])
+    patvirtintas_slaptazodis = PasswordField('Pakartokite slaptažodį', validators=[DataRequired(), EqualTo('slaptazodis')])
+    submit = SubmitField('Atnaujinti Slaptažodį')
 
 
 class StraipsnisForma(FlaskForm):

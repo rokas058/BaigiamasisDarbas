@@ -2,12 +2,12 @@
 
 {% block content %}
 
-<h1>Mityba</h1>
+<h1>Sportas</h1>
 <br>
-{% for straipsnis in data.items %}
-<h3><a href="{{ url_for('straipsnis',tema=straipsnis.tema, pavadinimas=straipsnis.pavadinimas, id=straipsnis.id) }}"
-class="text-info">{{ straipsnis.pavadinimas.capitalize() }}</a></h3>
-<p>{{ datetime.strftime(straipsnis.data, "%Y-%m-%d")}} <i>{{ straipsnis.vardas }}</i></p>
+{% for x in data.items %}
+<h3><a href="{{ url_for('straipsnis',tema=x.tema, pavadinimas=x.pavadinimas, id=x.id) }}"
+class="text-info">{{ x.pavadinimas.capitalize() }}</a></h3>
+<p>{{ datetime.strftime(x.data, "%Y-%m-%d")}} <i>{{ x.vardas }}</i></p>
 <hr>
 {% endfor %}
 {% for page_num in data.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}

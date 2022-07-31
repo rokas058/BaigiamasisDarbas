@@ -43,7 +43,11 @@
     </div>
     <div class="border-top pt-3">
         <small class="text-muted">
-                Neturi paskyros? <a class="ml-2" href="{{ url_for('registruotis') }}">Registruokis</a>
+            <a href="{{ url_for('reset_request') }}">Pamiršote slaptažodį?</a>
         </small>
     </div>
+    <small class="text-muted">
+        Neturi paskyros? <a class="ml-2" href="{{ url_for('registruotis') }}">Registruokis</a>
+    </small>
+
 {% endblock content %}
