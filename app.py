@@ -1,6 +1,6 @@
 from flask import render_template, request, redirect, url_for, flash
 import os
-from flask import Flask
+from flask import Flask, send_file
 from flask_sqlalchemy import SQLAlchemy
 from forms import *
 from sqlalchemy.exc import IntegrityError
@@ -14,6 +14,8 @@ from flask_admin.contrib.sqla import ModelView
 from flask_mail import Message, Mail
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from os import environ
+from isbandymas import issukis1, issukis2, issukis3, atnaujinti
+
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
@@ -350,6 +352,37 @@ def prideti_straipsni():
         if form.tema.data == "Sveikata":
             return redirect(url_for('straipsniai_sveikata'))
     return render_template('prideti_straipsni.html', title='prideti_straipsni', form=form)
+
+
+@app.route("/issukis", methods=['GET', 'POST'])
+@login_required
+def issukis():
+    form = IssukisForma()
+    data = atnaujinti()
+    if request.method == 'POST' and form.validate_on_submit():
+        pasirinkimas = request.form.get('pasirinkimas')
+        return redirect(url_for('atsisiusti', pasirinkimas=pasirinkimas))
+    return render_template('issukis.html', form=form, data=data)
+
+
+@app.route("/atsisiusti<string:pasirinkimas>")
+@login_required
+def atsisiusti(pasirinkimas):
+    if pasirinkimas == "Lengvas":
+        data = datetime.today().date()
+        funkcija = issukis1(data)
+        path = "issukis1"
+        return send_file(path, as_attachment=True)
+    if pasirinkimas == "Vidutinis":
+        data = datetime.today().date()
+        funkcija = issukis2(data)
+        path = "issukis2"
+        return send_file(path, as_attachment=True)
+    if pasirinkimas == "Sunkus":
+        data = datetime.today().date()
+        funkcija = issukis3(data)
+        path = "issukis3"
+        return send_file(path, as_attachment=True)
 
 
 if __name__ == '__main__':

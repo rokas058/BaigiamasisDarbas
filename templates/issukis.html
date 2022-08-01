@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h3>Septynių dienų iššūkis</h3>
+<p class="text-success"> Atnaujinta {{ data }}</p>
+<form method="post" , action="{{ url_for('issukis') }}">
+   	 {{ form.hidden_tag() }}
+	<div class="form-group">
+      {{ form.pasirinkimas(class="form-control") }}
+  </div>
+	<a>{{ form.submit(class="btn btn-primary") }}</a>
+</form>
+{% endblock %}
