@@ -90,3 +90,11 @@ class StraipsnisForma(FlaskForm):
         ('Sveikata', 'Sveikata')])
     tekstas = TextAreaField('Tekstas', render_kw={"rows": 10, "cols": 10})
     submit = SubmitField('Ikelti')
+
+
+class IssukisForma(FlaskForm):
+    pasirinkimas = SelectField('Pasirinkti', choices=[
+        ('Lengvas', 'Lengvas'),
+        ('Vidutinis', 'Vidutinis'),
+        ('Sunkus', 'Sunkus')])
+    submit = SubmitField('Atsisiųsti')

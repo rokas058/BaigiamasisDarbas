@@ -71,7 +71,8 @@ def maistingumo_listo_suma(listas):
         angliavandeniai += x[3]
         riebalai += x[4]
         kalorijos += x[1]
-    return round(baltymai), round(angliavandeniai), round(riebalai), int(kalorijos)
+        print(kalorijos)
+    return round(baltymai), round(angliavandeniai), round(riebalai), round(kalorijos)
 
 
 
