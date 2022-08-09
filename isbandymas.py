@@ -2,7 +2,7 @@ import datetime as DT
 
 
 def atnaujinti():
-    atnaujinta = DT.datetime(2022, 7, 31).date()
+    atnaujinta = DT.datetime(2022, 8, 4).date()
     return atnaujinta
 
 
