@@ -329,7 +329,6 @@ def straipsniai_sveikata():
 
 @app.route('/straipsniai_<string:tema>/<string:pavadinimas>#<int:id>')
 def straipsnis(tema, pavadinimas, id):
-    print(id)
     data = Straipsnis.query.filter_by(id=id)
     return render_template('straipsnis.html', pavadinimas=pavadinimas, tema=tema, id=id, data=data.all(),
                            datetime=datetime)
@@ -383,6 +382,14 @@ def atsisiusti(pasirinkimas):
         funkcija = issukis3(data)
         path = "issukis3"
         return send_file(path, as_attachment=True)
+
+
+@app.route("/paskyra")
+@login_required
+def paskyra():
+    vardas = current_user.vardas
+    el_pastas = current_user.el_pastas
+    return render_template('paskyra.html', vartotojas=vardas, pastas=el_pastas)
 
 
 if __name__ == '__main__':
