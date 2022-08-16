@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Mano straipsniai</h1>
+<br>
+{% for straipsnis in data.items %}
+<h3><a href="{{ url_for('straipsnis',tema=straipsnis.tema, pavadinimas=straipsnis.pavadinimas, id=straipsnis.id) }}"
+class="text-info">{{ straipsnis.pavadinimas.capitalize() }}</a></h3>
+<p>{{ datetime.strftime(straipsnis.data, "%Y-%m-%d")}} <i>{{ straipsnis.vardas }}</i></p>
+<button type="button" class="btn btn-warning">Redaguoti</button>
+<a  type="button" class="btn btn-danger" href="{{ url_for('istrinti_straipsni', id=straipsnis.id) }}">Ištrinti</a>
+<hr>
+{% endfor %}
+{% for page_num in data.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+  {% if page_num %}
+    {% if data.page == page_num %}
+      <a class="btn btn-info mb-4" href="{{ url_for('mano_straipsniai', page=page_num) }}">{{ page_num }}</a>
+    {% else %}
+      <a class="btn btn-outline-info mb-4" href="{{ url_for('mano_straipsniai', page=page_num) }}">{{ page_num }}</a>
+    {% endif %}
+  {% else %}
+    ...
+  {% endif %}
+{% endfor %}
+
+
+
+{% endblock %}
