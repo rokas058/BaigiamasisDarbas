@@ -353,6 +353,23 @@ def prideti_straipsni():
     return render_template('prideti_straipsni.html', title='prideti_straipsni', form=form)
 
 
+@app.route("/mano_straipsniai")
+@login_required
+def mano_straipsniai():
+    page = request.args.get('page', 1, type=int)
+    data = Straipsnis.query.filter_by(vardas=current_user.vardas).order_by(Straipsnis.data.desc()).paginate(page=page, per_page=9)
+    return render_template('mano_straipsniai.html', data=data, datetime=datetime)
+
+
+@app.route("/mano_straipsniai/<id>")
+@login_required
+def istrinti_straipsni(id):
+    istrinti = Straipsnis.query.get(id)
+    db.session.delete(istrinti)
+    db.session.commit()
+    return redirect(url_for("mano_straipsniai"))
+
+
 @app.route("/issukis", methods=['GET', 'POST'])
 @login_required
 def issukis():

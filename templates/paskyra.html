@@ -2,7 +2,41 @@
 
 {% block content %}
 
-<h2>Vardas: {{ vartotojas }}</h2>
-<h2>El.paštas: {{ pastas }}</h2>
+<h3>Paskyros informacija</h3>
+<hr>
+<div id="accordion">
+  <div class="card">
+    <div class="card-header" id="headingOne" style="background-color:#F0F8FF;">
+      <h5 class="mb-0">
+        <button class="btn btn-link collapsed text-info" data-toggle="collapse" data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+          Vardas
+        </button>
+      </h5>
+    </div>
+
+    <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+      <div class="card-body">
+          {{ vartotojas }}
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-header" id="headingTwo" style="background-color:#F0F8FF;">
+      <h5 class="mb-0">
+        <button class="btn btn-link collapsed text-info" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+          El.paštas
+        </button>
+      </h5>
+    </div>
+    <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordion">
+      <div class="card-body">
+          {{ pastas }}
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
 
 {% endblock %}

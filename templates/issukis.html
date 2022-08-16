@@ -3,6 +3,7 @@
 {% block content %}
 
 <h3>Septynių dienų iššūkis</h3>
+<hr>
 <p class="text-success"> Atnaujinta {{ data }}</p>
 <form method="post" , action="{{ url_for('issukis') }}">
    	 {{ form.hidden_tag() }}
