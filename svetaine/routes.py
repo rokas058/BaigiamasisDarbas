@@ -1,111 +1,20 @@
-from flask import render_template, request, redirect, url_for, flash
-import os
-from flask import Flask, send_file
-from flask_sqlalchemy import SQLAlchemy
-from forms import *
-from sqlalchemy.exc import IntegrityError
-from skaiciavimai import kuno_mases_indeksas, bmr, intensyvumas, tikslas, maisto_svorio_maistingumas, \
-    maistingumo_listo_suma
-from flask_login import LoginManager, UserMixin, current_user, login_user, login_required, logout_user
-from flask_bcrypt import Bcrypt
+from flask import render_template, redirect, url_for, flash, request
+from flask_login import current_user, logout_user, login_user, login_required
 from datetime import datetime
-from flask_admin import Admin
-from flask_admin.contrib.sqla import ModelView
-from flask_mail import Message, Mail
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
-from os import environ
-from isbandymas import issukis1, issukis2, issukis3, atnaujinti
-
-
-basedir = os.path.abspath(os.path.dirname(__file__))
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'bet kokia simbolių eilutė'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite')
-
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
-
-login_manager = LoginManager(app)
-login_manager.login_view = 'registruotis'
-login_manager.login_message_category = 'info'
-
-bcrypt = Bcrypt(app)
-
-
-class Maistingumas(db.Model):
-    __tablename__ = 'maistingumas'
-    id = db.Column(db.Integer, primary_key=True)
-    pavadinimas = db.Column(db.String(80), unique=True, nullable=False)
-    kalorijos = db.Column(db.Integer, nullable=False)
-    baltymai = db.Column(db.Float, nullable=False)
-    angliavandeniai = db.Column(db.Float, nullable=False)
-    riebalai = db.Column(db.Float, nullable=False)
-
-    def __init__(self, pavadinimas, kalorijos, baltymai, angliavandeniai, riebalai):
-        self.pavadinimas = pavadinimas
-        self.kalorijos = kalorijos
-        self.baltymai = baltymai
-        self.angliavandeniai = angliavandeniai
-        self.riebalai = riebalai
-
-    def __repr__(self):
-        return f'{self.pavadinimas} : {self.kalorijos}, {self.baltymai}, {self.angliavandeniai}, {self.riebalai}'
-
-
-class Vartotojas(db.Model, UserMixin):
-    __tablename__ = "vartotojas"
-    id = db.Column(db.Integer, primary_key=True)
-    vardas = db.Column("Vardas", db.String(20), unique=True, nullable=False)
-    el_pastas = db.Column("El. pašto adresas", db.String(120), unique=True, nullable=False)
-    slaptazodis = db.Column("Slaptažodis", db.String(60), unique=True, nullable=False)
-
-    def get_reset_token(self):
-        s = Serializer(app.config['SECRET_KEY'])
-        return s.dumps({'user_id': self.id}).decode('utf-8')
-
-    @staticmethod
-    def verify_reset_token(token):
-        s = Serializer(app.config['SECRET_KEY'])
-        try:
-            user_id = s.loads(token)['user_id']
-        except:
-            return None
-        return Vartotojas.query.get(user_id)
-
-
-class Straipsnis(db.Model):
-    __tablename__ = "straipsnis"
-    id = db.Column(db.Integer, primary_key=True)
-    vardas = db.Column("Vardas", db.String(), nullable=False)
-    pavadinimas = db.Column("Pavadinimas", db.String(), nullable=False)
-    tema = db.Column("Tema", db.String(), nullable=False)
-    data = db.Column("Data", db.DateTime(), nullable=False, default=datetime.today())
-    tekstas = db.Column("Tekstas", db.String(), nullable=False)
-
-    def __repr__(self):
-        return f'{self.vardas}, {self.pavadinimas}, {self.tema}, {self.data}, {self.tekstas}'
-
-
-class ManoModelView(ModelView):
-    def is_accessible(self):
-        return current_user.is_authenticated and current_user.el_pastas == "rokas.prabusas@gmail.com"
-
-
-admin = Admin(app)
-admin.add_view(ManoModelView(Vartotojas, db.session))
-admin.add_view(ManoModelView(Straipsnis, db.session))
-admin.add_view(ManoModelView(Maistingumas, db.session))
-
-
-@login_manager.user_loader
-def load_user(vartotojo_id):
-    return Vartotojas.query.get(int(vartotojo_id))
+from flask_mail import Message
+from svetaine import forms, db, app, bcrypt, mail
+from svetaine.models import Vartotojas, Straipsnis, Maistingumas
+from sqlalchemy.exc import IntegrityError
+from svetaine.skaiciavimai import maistingumo_listo_suma, maisto_svorio_maistingumas, kuno_mases_indeksas, intensyvumas, bmr, \
+    tikslas
+from svetaine.isbandymas import atnaujinti, issukis1, issukis2, issukis3
+from flask import send_file
 
 
 @app.route("/registruotis", methods=['GET', 'POST'])
 def registruotis():
     db.create_all()
-    form = RegistracijosForma()
+    form = forms.RegistracijosForma()
     if form.validate_on_submit():
         try:
             koduotas_slaptazodis = bcrypt.generate_password_hash(form.slaptazodis.data).decode('utf-8')
@@ -123,7 +32,7 @@ def registruotis():
 def prisijungti():
     if current_user.is_authenticated:
         return redirect(url_for('base'))
-    form = PrisijungimoForma()
+    form = forms.PrisijungimoForma()
     if form.validate_on_submit():
         user = Vartotojas.query.filter_by(el_pastas=form.el_pastas.data).first()
         if user and bcrypt.check_password_hash(user.slaptazodis, form.slaptazodis.data):
@@ -133,16 +42,6 @@ def prisijungti():
         else:
             flash('Prisijungti nepavyko. Patikrinkite el. paštą ir slaptažodį', 'danger')
     return render_template('prisijungti.html', title='Prisijungti', form=form)
-
-
-psw = environ.get('slaptazodis')
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'rokas.prabusas058@gmail.com'
-app.config['MAIL_PASSWORD'] = psw
-
-mail = Mail(app)
 
 
 def send_reset_email(user):
@@ -161,7 +60,7 @@ def send_reset_email(user):
 def reset_request():
     if current_user.is_authenticated:
         return redirect(url_for('base'))
-    form = UzklausosAtnaujinimoForma()
+    form = forms.UzklausosAtnaujinimoForma()
     if form.validate_on_submit():
         user = Vartotojas.query.filter_by(el_pastas=form.el_pastas.data).first()
         if user is None:
@@ -181,7 +80,7 @@ def reset_token(token):
     if user is None:
         flash('Užklausa netinkama arba pasibaigusio galiojimo', 'warning')
         return redirect(url_for('reset_request'))
-    form = SlaptazodzioAtnaujinimoForma()
+    form = forms.SlaptazodzioAtnaujinimoForma()
     if form.validate_on_submit():
         hashed_password = bcrypt.generate_password_hash(form.slaptazodis.data).decode('utf-8')
         user.slaptazodis = hashed_password
@@ -204,7 +103,8 @@ def base():
 
 @app.route('/maistas_prideti', methods=["GET", "POST"])
 def maistas_prideti():
-    form = PridejimoForma()
+    db.create_all()
+    form = forms.PridejimoForma()
     if form.validate_on_submit():
         produktas = request.form.get('produktas').capitalize()
         kalorijos = int(request.form['kalorijos'])
@@ -227,7 +127,8 @@ listas_maisto = []
 
 @app.route('/tikrinti_maista', methods=['GET', 'POST'])
 def tikrinti_maista():
-    form = TikrintiForma()
+    db.create_all()
+    form = forms.TikrintiForma()
     if request.method == 'POST' and form.validate_on_submit():
         produktas = request.form.get('ieskoti').capitalize()
         svoris = request.form.get('svoris')
@@ -251,7 +152,7 @@ def tikrinti_maista():
 
 @app.route('/kuno_mases_indeksas', methods=['GET', 'POST'])
 def kmi():
-    form = KalorijuForma()
+    form = forms.KalorijuForma()
     if request.method == 'POST' and form.validate_on_submit():
         mase = int(request.form['svoris'])
         ugis = int(request.form['ugis'])
@@ -262,7 +163,7 @@ def kmi():
 
 @app.route('/dienos_kaloriju_norma', methods=['GET', 'POST'])
 def dkn():
-    form = DienosKalorijuForma()
+    form = forms.DienosKalorijuForma()
     if request.method == 'POST' and form.validate_on_submit():
         mase = int(request.form['svoris'])
         ugis = int(request.form['ugis'])
@@ -337,7 +238,8 @@ def straipsnis(tema, pavadinimas, id):
 @app.route("/prideti_straipsni", methods=['GET', 'POST'])
 @login_required
 def prideti_straipsni():
-    form = StraipsnisForma()
+    db.create_all()
+    form = forms.StraipsnisForma()
     if form.validate_on_submit():
         prideti = Straipsnis(vardas=current_user.vardas, pavadinimas=form.pavadinimas.data, tema=form.tema.data,
                              tekstas=form.tekstas.data)
@@ -361,7 +263,7 @@ def mano_straipsniai():
     return render_template('mano_straipsniai.html', data=data, datetime=datetime)
 
 
-@app.route("/mano_straipsniai/<id>")
+@app.route("/delete/<id>")
 @login_required
 def istrinti_straipsni(id):
     istrinti = Straipsnis.query.get(id)
@@ -370,10 +272,25 @@ def istrinti_straipsni(id):
     return redirect(url_for("mano_straipsniai"))
 
 
+@app.route("/update/<int:id>", methods=['GET', 'POST'])
+def redaguoti_straipsni(id):
+    forma = forms.StraipsnisForma()
+    straipsnis1 = Straipsnis.query.get(id)
+    if forma.validate_on_submit():
+        straipsnis1.pavadinimas = forma.pavadinimas.data
+        straipsnis1.tema = forma.tema.data
+        straipsnis1.tekstas = forma.tekstas.data
+        db.session.add(straipsnis1)
+        db.session.commit()
+        flash('Sėkmingai redagavote.', 'success')
+        return redirect(url_for('mano_straipsniai'))
+    return render_template("redaguoti_straipsni.html", form=forma, straipsnis=straipsnis1)
+
+
 @app.route("/issukis", methods=['GET', 'POST'])
 @login_required
 def issukis():
-    form = IssukisForma()
+    form = forms.IssukisForma()
     data = atnaujinti()
     if request.method == 'POST' and form.validate_on_submit():
         pasirinkimas = request.form.get('pasirinkimas')
@@ -409,5 +326,16 @@ def paskyra():
     return render_template('paskyra.html', vartotojas=vardas, pastas=el_pastas)
 
 
-if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=8000, debug=True)
+@app.errorhandler(404)
+def klaida_404(klaida):
+    return render_template("404.html"), 404
+
+
+@app.errorhandler(403)
+def klaida_403(klaida):
+    return render_template("403.html"), 403
+
+
+@app.errorhandler(500)
+def klaida_500(klaida):
+    return render_template("500.html"), 500

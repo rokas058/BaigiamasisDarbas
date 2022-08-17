@@ -1,8 +1,8 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, FloatField, SubmitField, IntegerField, SelectField, PasswordField, BooleanField, \
+from wtforms import SubmitField, BooleanField, StringField, PasswordField, FloatField, IntegerField, SelectField, \
     TextAreaField
-from wtforms.validators import DataRequired, ValidationError, EqualTo, Email, Length
-import app
+from wtforms.validators import DataRequired, ValidationError, EqualTo, Email
+from svetaine.models import Vartotojas
 
 
 class PridejimoForma(FlaskForm):
@@ -49,12 +49,12 @@ class RegistracijosForma(FlaskForm):
     submit = SubmitField('Prisiregistruoti')
 
     def tikrinti_varda(self, vardas):
-        vartotojas = app.Vartotojas.query.filter_by(vardas=vardas.data).first()
+        vartotojas = Vartotojas.query.filter_by(vardas=vardas.data).first()
         if vartotojas:
             raise ValidationError('Šis vardas panaudotas. Pasirinkite kitą.')
 
     def tikrinti_pasta(self, el_pastas):
-        vartotojas = app.Vartotojas.query.filter_by(el_pastas=el_pastas.data).first()
+        vartotojas = Vartotojas.query.filter_by(el_pastas=el_pastas.data).first()
         if vartotojas:
             raise ValidationError('Šis el. pašto adresas panaudotas. Pasirinkite kitą.')
 
@@ -71,7 +71,7 @@ class UzklausosAtnaujinimoForma(FlaskForm):
     submit = SubmitField('Gauti')
 
     def validate_email(self, el_pastas):
-        user = app.Vartotojas.query.filter_by(el_pastas=el_pastas.data).first()
+        user = Vartotojas.query.filter_by(el_pastas=el_pastas.data).first()
         if user is None:
             raise ValidationError('Nėra paskyros, registruotos šiuo el. pašto adresu. Registruokitės.')
 
