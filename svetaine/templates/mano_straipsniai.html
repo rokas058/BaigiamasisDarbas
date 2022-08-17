@@ -6,8 +6,9 @@
 {% for straipsnis in data.items %}
 <h3><a href="{{ url_for('straipsnis',tema=straipsnis.tema, pavadinimas=straipsnis.pavadinimas, id=straipsnis.id) }}"
 class="text-info">{{ straipsnis.pavadinimas.capitalize() }}</a></h3>
-<p>{{ datetime.strftime(straipsnis.data, "%Y-%m-%d")}} <i>{{ straipsnis.vardas }}</i></p>
-<button type="button" class="btn btn-warning">Redaguoti</button>
+<p>{{ datetime.strftime(straipsnis.data, "%Y-%m-%d")}}</p>
+<p>Tema: {{ straipsnis.tema }}</p>
+<a type="button" class="btn btn-warning" href="{{ url_for('redaguoti_straipsni', id=straipsnis.id) }}">Redaguoti</a>
 <a  type="button" class="btn btn-danger" href="{{ url_for('istrinti_straipsni', id=straipsnis.id) }}">Ištrinti</a>
 <hr>
 {% endfor %}

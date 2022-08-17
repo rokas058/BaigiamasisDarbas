@@ -13,7 +13,7 @@ def issukis1(data):
     penkta_diena = data + DT.timedelta(days=4)
     sesta_diena = data + DT.timedelta(days=5)
     septinta_diena = data + DT.timedelta(days=6)
-    with open("issukis1", "w") as f:
+    with open("svetaine/issukis1", "w") as f:
         f.write(f'''
 {data}
 1. 20 atsispaudimu
@@ -52,7 +52,6 @@ def issukis1(data):
         f.close()
 
 
-
 def issukis2(data):
     antra_diena = data + DT.timedelta(days=1)
     trecia_diena = data + DT.timedelta(days=2)
@@ -60,7 +59,7 @@ def issukis2(data):
     penkta_diena = data + DT.timedelta(days=4)
     sesta_diena = data + DT.timedelta(days=5)
     septinta_diena = data + DT.timedelta(days=6)
-    with open("issukis2", "w") as f:
+    with open("svetaine/issukis2", "w") as f:
         f.write(f'''
 {data}
 1. 40 atsispaudimu
@@ -106,7 +105,7 @@ def issukis3(data):
     penkta_diena = data + DT.timedelta(days=4)
     sesta_diena = data + DT.timedelta(days=5)
     septinta_diena = data + DT.timedelta(days=6)
-    with open("issukis3", "w") as f:
+    with open("svetaine/issukis3", "w") as f:
         f.write(f'''
 {data}
 1. 60 atsispaudimu
