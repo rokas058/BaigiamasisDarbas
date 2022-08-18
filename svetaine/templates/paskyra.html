@@ -2,7 +2,7 @@
 
 {% block content %}
 
-<h3>Paskyros informacija</h3>
+<h2>Paskyros informacija</h2>
 <hr>
 <div id="accordion">
   <div class="card">
@@ -34,6 +34,21 @@
       </div>
     </div>
   </div>
+    <div class="card">
+    <div class="card-header" id="headingThree" style="background-color:#F0F8FF;">
+      <h5 class="mb-0">
+        <button class="btn btn-link collapsed text-info" data-toggle="collapse" data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+          Keisti slaptažodį
+        </button>
+      </h5>
+    </div>
+    <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#accordion">
+      <div class="card-body text-primary">
+        <a href="{{ url_for('reset_request') }}" class="stretched-link" style="position: relative;">Spausti čia!</a>
+      </div>
+    </div>
+  </div>
+</div>
 </div>
 
 

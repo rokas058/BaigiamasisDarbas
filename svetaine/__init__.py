@@ -20,7 +20,6 @@ from svetaine.models import Vartotojas, Straipsnis, Maistingumas
 from svetaine.models import *
 
 bcrypt = Bcrypt(app)
-mail = Mail(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'registruotis'
 login_manager.login_message_category = 'info'
@@ -44,10 +43,13 @@ admin.add_view(ManoModelView(Maistingumas, db.session))
 
 psw = environ.get('slaptazodis')
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = 'rokas.prabusas058@gmail.com'
 app.config['MAIL_PASSWORD'] = psw
+mail = Mail(app)
+
 
 from svetaine import routes
 

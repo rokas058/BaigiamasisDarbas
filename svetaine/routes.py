@@ -58,8 +58,6 @@ def send_reset_email(user):
 
 @app.route("/reset_request", methods=['GET', 'POST'])
 def reset_request():
-    if current_user.is_authenticated:
-        return redirect(url_for('base'))
     form = forms.UzklausosAtnaujinimoForma()
     if form.validate_on_submit():
         user = Vartotojas.query.filter_by(el_pastas=form.el_pastas.data).first()
@@ -74,8 +72,6 @@ def reset_request():
 
 @app.route("/reset_password/<token>", methods=['GET', 'POST'])
 def reset_token(token):
-    if current_user.is_authenticated:
-        return redirect(url_for('base'))
     user = Vartotojas.verify_reset_token(token)
     if user is None:
         flash('Užklausa netinkama arba pasibaigusio galiojimo', 'warning')
@@ -85,7 +81,7 @@ def reset_token(token):
         hashed_password = bcrypt.generate_password_hash(form.slaptazodis.data).decode('utf-8')
         user.slaptazodis = hashed_password
         db.session.commit()
-        flash('Tavo slaptažodis buvo atnaujintas! Gali prisijungti', 'success')
+        flash('Tavo slaptažodis buvo atnaujintas!', 'success')
         return redirect(url_for('prisijungti'))
     return render_template('reset_token.html', title='Reset Password', form=form)
 
@@ -339,3 +335,5 @@ def klaida_403(klaida):
 @app.errorhandler(500)
 def klaida_500(klaida):
     return render_template("500.html"), 500
+
+
