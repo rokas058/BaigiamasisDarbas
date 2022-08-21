@@ -58,6 +58,11 @@ def send_reset_email(user):
 
 @app.route("/reset_request", methods=['GET', 'POST'])
 def reset_request():
+    if current_user.is_authenticated:
+        user_current = Vartotojas.query.filter_by(el_pastas=current_user.el_pastas).first()
+        send_reset_email(user_current)
+        flash('Jums išsiųstas el. laiškas su slaptažodžio atnaujinimo instrukcijomis.', 'info')
+        return redirect(url_for('base'))
     form = forms.UzklausosAtnaujinimoForma()
     if form.validate_on_submit():
         user = Vartotojas.query.filter_by(el_pastas=form.el_pastas.data).first()
